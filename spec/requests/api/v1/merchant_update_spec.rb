@@ -2,12 +2,14 @@ require 'rails_helper'
 
 RSpec.describe "merchants update action" do
   describe "happy path test" do  
-    it "can update a merchant" do
+    before :each do
       @merchant1 = Merchant.create(name: 'Wally')
       @merchant2 = Merchant.create(name: 'James')
       @merchant3 = Merchant.create(name: 'Natasha')
       @merchant4 = Merchant.create(name: 'Jonathan')
-
+    end
+    
+    it "can update a merchant" do
       current_name = @merchant4.name
       updated_name = { name: 'Sweep the leg, Johnny' }
 
@@ -29,11 +31,6 @@ RSpec.describe "merchants update action" do
 
   describe "sad path test" do
     it "returns an error if the merchant does not exist" do
-      @merchant1 = Merchant.create(name: 'Wally')
-      @merchant2 = Merchant.create(name: 'James')
-      @merchant3 = Merchant.create(name: 'Natasha')
-      @merchant4 = Merchant.create(name: 'Jonathan')
-
       no_merchant = @merchant2.id + 5
 
       patch "/api/v1/merchants/#{no_merchant}", params: { name: 'No Name' } 
@@ -46,11 +43,6 @@ RSpec.describe "merchants update action" do
     end
 
     it "returns an error if an attribute is missing" do
-      @merchant1 = Merchant.create(name: 'Wally')
-      @merchant2 = Merchant.create(name: 'James')
-      @merchant3 = Merchant.create(name: 'Natasha')
-      @merchant4 = Merchant.create(name: 'Jonathan')
-      
       current_name = @merchant3.name
       updated_name = { name: 'No Name' }
 

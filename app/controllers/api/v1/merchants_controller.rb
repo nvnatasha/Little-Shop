@@ -5,6 +5,15 @@ class Api::V1::MerchantsController < ApplicationController
     render json: MerchantSerializer.new(merchants)
   end
 
+  def create
+    begin
+      merchant = Merchant.create!(merchant_params)
+      render json:MerchantSerializer.new(merchant)
+    rescue ActiveRecord::RecordInvalid => errors
+      render json: error_messages(errors.record.errors.full_messages, 422), status: 422
+    end
+  end
+
   def update
     begin
       merchant = Merchant.find(params[:id])
