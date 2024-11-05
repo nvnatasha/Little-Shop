@@ -10,7 +10,17 @@ class Api::V1::ItemsController < ApplicationController
     end
   end
 
+  def show
+    item = Item.find(params[:id])
+    render json: ItemSerializer.format_single_item(item)
+  end
+
   def create
+    begin
+      item = Item.create!(item_params)
+      render json: ItemSerializer.format_items([item]), status: 201
+    rescue ActiveRecord::RecordInvalid => errors
+      render json: error_messages(errors.record.errors.full_messages, 422), status: 422
     item = Item.new(item_params)
     if item.save
       render json: ItemSerializer.format_single_item(item), status: :created

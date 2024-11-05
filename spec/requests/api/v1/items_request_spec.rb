@@ -173,9 +173,6 @@ RSpec.describe "Items API", type: :request do
       expect(InvoiceItem.count).to eq(invoiceItemCount - 2)
     end
   end
-resolve_status_code_post_items
-
- return_the_merchant_associated_with_an_item
 
 
 =======
@@ -194,7 +191,6 @@ resolve_status_code_post_items
     end
   end
 
-return_the_merchant_associated_with_an_item
   it 'can return the merchant associated with an item' do
     get "/api/v1/items/#{@item1.id}/merchant"
     expect(response).to be_successful
@@ -223,7 +219,6 @@ return_the_merchant_associated_with_an_item
     expect(data[:message]).to eq("your query could not be completed") 
     expect(data[:errors].first).to eq("Couldn't find Item with 'id'=#{missing_id}") 
   end
-end
 
   describe "updating an item" do
 
@@ -233,7 +228,7 @@ end
           description: "Stuff to keep cats happy", 
           unit_price: 30.00, 
           merchant_id: @merchant.id
-    }
+          }
       post '/api/v1/items#create', params: { item: item_attributes }
 
       item = JSON.parse(response.body, symbolize_names: true)[:data].first   

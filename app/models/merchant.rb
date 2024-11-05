@@ -1,10 +1,16 @@
 class Merchant < ApplicationRecord
   validates :name, presence: true
- get_all_merchants_with_returned_items
   has_many :invoices
 
 
   has_many :items, dependent: :destroy
+
+  def self.queried(params)
+    merchants = Merchant.all
+    merchants = Merchant.sort(params)
+    merchants = params[:count] == 'true' ? Merchant.with_item_count : merchants
+    merchants
+  end
   has_many :customers
 
   def self.sort(params)
@@ -33,4 +39,12 @@ class Merchant < ApplicationRecord
       end
     end
   end
+
+  def self.with_item_count
+      select("merchants.*, COUNT(items.id) AS item_count")
+        .left_joins(:items)
+        .group("merchants.id")
+        
+  end
 end
+
