@@ -27,6 +27,30 @@ RSpec.describe "Items API", type: :request do
     )
   end
 
+  context "when the request is valid" do
+    let(:valid_attributes) do
+      {
+        item: {
+          name: "Cat Tower",
+          description: "A tower for cats to climb and play.",
+          unit_price: 45.00,
+          merchant_id: @merchant.id
+        }
+      }
+    end
+
+    it "creates a new item" do
+      expect {
+        post "/api/v1/items", params: valid_attributes
+      }.to change(Item, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      json_response = JSON.parse(response.body)
+      expect(json_response['data']['attributes']['name']).to eq("Cat Tower")
+      expect(json_response['data']['attributes']['unit_price']).to eq(45.00)
+    end
+  end  # This end correctly closes the context block.
+
   it 'can fetch all items' do
     get '/api/v1/items'
     
@@ -65,7 +89,7 @@ RSpec.describe "Items API", type: :request do
     
     item = JSON.parse(response.body, symbolize_names: true)[:data]
     
-    expect(item[:id].to_i).to eq(@item1.id) # Convert `item[:id]` to integer
+    expect(item[:id].to_i).to eq(@item1.id)
     expect(item[:type]).to eq('item')
 
     attrs = item[:attributes]
@@ -110,7 +134,7 @@ RSpec.describe "Items API", type: :request do
   end
 
   describe 'delete single item' do
-    it 'can delete an single item' do
+    it 'can delete a single item' do
       itemCount = Item.count
       delete "/api/v1/items/#{@item1.id}"
       expect(response).to be_successful
@@ -132,6 +156,7 @@ RSpec.describe "Items API", type: :request do
       expect(error_response["message"]).to eq("your query could not be completed")
       expect(error_response["errors"]).to include("Couldn't find Item with 'id'=#{item1Id}")
     end
+<<<<<<< HEAD
 
     it 'deletes all associated invoice items when it deletes a single item' do
       customer = Customer.create!(first_name: "Wally", last_name: "Wallace")
@@ -153,6 +178,9 @@ resolve_status_code_post_items
  return_the_merchant_associated_with_an_item
 
 
+=======
+  end
+>>>>>>> origin/get_all_items
 
   describe "sad path test" do
     it "returns an error if the item does not exist" do
