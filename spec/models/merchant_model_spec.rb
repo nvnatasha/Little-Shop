@@ -74,4 +74,31 @@ RSpec.describe Merchant, type: :model do
       expect(response).to eq("Couldn't find Item with 'id'=#{itemId}")
     end
   end
+
+  describe 'find' do
+    before :each do
+      Merchant.destroy_all
+      @merchant1 = Merchant.create(name: 'Wally')
+      @merchant2 = Merchant.create(name: 'James')
+      @merchant3 = Merchant.create(name: 'Natasha')
+      @merchant4 = Merchant.create(name: 'Jonathan')
+    end
+
+    it 'finds the first matching merchant by name (case insensitive)' do
+      merchant = Merchant.find_by_params({ name: 'na'})
+      expect(merchant[0]).to eq(@merchant3)
+    end
+    it 'does not error when there are no matching merchants' do
+      merchant = Merchant.find_by_params({ name: 'abdul'})
+      expect(merchant).to eq([])
+    end
+    it 'errors when a parameter is missing' do
+      merchant = Merchant.find_by_params({})
+      expect(merchant).to be_a(Hash)
+    end
+    it 'errors when a parameter is empty' do
+      merchant = Merchant.find_by_params({ name: ''})
+      expect(merchant).to be_a(Hash)
+    end
+  end
 end

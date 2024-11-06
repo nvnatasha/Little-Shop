@@ -283,5 +283,31 @@ RSpec.describe "Merchants API" do
         expect(invoices["data"].count).to eq(0)
       end
     end
+
+    describe 'find' do
+      it 'finds the first matching merchant by name (case insensitive)' do
+        get '/api/v1/merchants/find?name=na'
+
+        expect(response).to be_successful
+
+        merchant = JSON.parse(response.body, symbolize_names: true)[:data]
+        expect(merchant[0][:id]).to eq(@merchant3.id.to_s)
+      end
+
+      it 'does not error when there are no matching merchants' do
+        get '/api/v1/merchants/find?name=abdul'
+        expect(response).to be_successful
+      end
+
+      it 'errors when a parameter is missing' do
+        get '/api/v1/merchants/find?'
+        expect(response).to_not be_successful
+      end
+
+      it 'errors when a parameter is empty' do
+        get '/api/v1/merchants/find?name='
+        expect(response).to_not be_successful
+      end
+    end
   end
 end

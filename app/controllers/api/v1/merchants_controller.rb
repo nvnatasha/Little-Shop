@@ -1,7 +1,9 @@
 class Api::V1::MerchantsController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found_response
+  rescue_from ActiveRecord::RecordInvalid, with: :invalid_record_response
 
   def index
-    merchants = Merchant.queried(params)
+    merchants = Merchant.queried(params).order(:id)
     if params[:count] == 'true'
       render json: MerchantSerializer.format_with_item_count(merchants)
     else
@@ -10,34 +12,20 @@ class Api::V1::MerchantsController < ApplicationController
   end
 
   def create
-    begin
-      merchant = Merchant.create!(merchant_params)
-      render json:MerchantSerializer.new(merchant), status: 201
-    rescue ActiveRecord::RecordInvalid => errors
-      render json: error_messages(errors.record.errors.full_messages, 422), status: 422
-    end
+    merchant = Merchant.create!(merchant_params)
+    render json:MerchantSerializer.new(merchant), status: 201
   end
 
   def update
-    begin
-      merchant = Merchant.find(params[:id])
-      merchant.update!(merchant_params)
-      render json:MerchantSerializer.new(merchant)
-    rescue ActiveRecord::RecordNotFound => error
-      render json: error_messages([error.message], 404), status: 404
-    rescue ActiveRecord::RecordInvalid => errors
-      render json: error_messages(errors.record.errors.full_messages, 422), status: 422
-    end
+    merchant = Merchant.find(params[:id])
+    merchant.update!(merchant_params)
+    render json:MerchantSerializer.new(merchant)
   end
 
   def destroy
-    begin
-      merchant = Merchant.find(params[:id])
-      merchant.destroy
-      head :no_content 
-    rescue ActiveRecord::RecordNotFound => error
-      render json: error_messages([error.message], 404), status: 404
-    end
+    merchant = Merchant.find(params[:id])
+    merchant.destroy
+    head :no_content 
   end
 
   def show
@@ -49,10 +37,27 @@ class Api::V1::MerchantsController < ApplicationController
     end
   end
 
+  def find
+    merchant = Merchant.find_by_params(params)
+    if merchant.is_a?(Hash)
+      render json: {"message": "your query could not be completed", "errors": ["#{merchant}"]}, status: 404
+    else
+      render json: MerchantSerializer.new(merchant)
+    end
+  end
+
   private
 
   def merchant_params
     params.permit(:name)
+  end
+
+  def not_found_response(exception = "Record not found")
+    render json: { message: "your request could not be completed", errors: [exception.to_s] }, status: :not_found
+  end
+
+  def invalid_record_response(exception)
+    render json: { message: "your request could not be completed", errors: exception.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   def error_messages(messages, status)

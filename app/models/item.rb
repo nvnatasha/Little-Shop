@@ -20,4 +20,18 @@ class Item < ApplicationRecord
       Item.all
     end
   end
+
+  def self.find_all(params = {})
+    if  params.has_key?(:name) && (params.has_key?(:max_price) || params.has_key?(:min_price))
+      { error: { message: "you can't ask for both", status: 405 } }
+    elsif params.has_key?(:name)
+      items = Item.where('name ILIKE ?', "%#{params[:name]}%") 
+    elsif params.has_key?(:max_price) && params.has_key?(:min_price)
+      items = Item.where("unit_price between ? and ?", params[:min_price], params[:max_price])
+    elsif params.has_key?(:min_price)
+      items = Item.where("unit_price > ?", params[:min_price])
+    elsif params.has_key?(:max_price)
+      items = Item.where("unit_price < ?", params[:max_price])
+    end
+  end
 end

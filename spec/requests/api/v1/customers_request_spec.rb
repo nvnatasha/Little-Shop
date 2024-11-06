@@ -13,6 +13,8 @@ RSpec.describe 'Customers API', type: :request do
 
       @invoice1 = Invoice.create!(merchant: @merchant1, customer: @customer1)
       @invoice2 = Invoice.create!(merchant: @merchant1, customer: @customer2, status: 'completed')
+      @invoice3 = Invoice.create!(merchant: @merchant1, customer: @customer2, status: 'returned')
+      
   end
 
   it 'can return customers' do
@@ -64,7 +66,7 @@ end
 
     expect(response).to be_successful
     invoices = JSON.parse(response.body, symbolize_names: true)[:data]    
-    expect(invoices.count).to eq(2)
+    expect(invoices.count).to eq(3)
     invoice_statuses = invoices.map { |invoice| invoice[:attributes][:status] }
     expect(invoice_statuses).to include('pending', 'completed')
   end
