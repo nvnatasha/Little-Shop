@@ -1,14 +1,9 @@
 class ErrorSerializer
   include JSONAPI::Serializer
-  def self.format_error(exception, status)
+  def self.format_error(exception)
     {
-      message: "your request could not be completed",
-      errors: [
-        {
-          status: status,
-          title: exception.message
-        }
-      ]
+      message: "your query could not be completed",
+      errors: [exception.message]
     }
   end
 end

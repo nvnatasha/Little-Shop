@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   # root "posts#index"
   namespace :api do 
     namespace :v1 do
-      resources :items, only: [:index, :show, :create, :destroy] do
+      resources :items do
         get '/merchant', to: "merchants#show"
       end
       resources :merchants do
