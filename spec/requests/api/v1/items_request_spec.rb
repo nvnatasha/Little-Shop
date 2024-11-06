@@ -181,11 +181,9 @@ RSpec.describe "Items API", type: :request do
       expect(Item.count).to eq(itemCount - 1)
     end
 
-    xit 'deletes all associated invoice items when it deletes a single item' do
-      #!NoMethodError: undefined method `name' for #<InvoiceItem id: nil, item_id: 978, invoice_id: 132, quantity: 2, unit_price: 10.99, created_at: nil, updated_at: nil>
+    it 'deletes all associated invoice items when it deletes a single item' do
       customer = Customer.create!(first_name: "Wally", last_name: "Wallace")
       invoice = Invoice.create!(customer_id: customer.id, merchant_id: @merchant.id, status: "shipped")
-      require 'pry'; binding.pry
       invoice2 = Invoice.create!(customer_id: customer.id, merchant_id: @merchant.id, status: "returned")
       invoice_item1 = InvoiceItem.create!(item_id: @item1.id, invoice_id: invoice.id, quantity: 3, unit_price: 9.99)
       invoice_item2 = InvoiceItem.create!(item_id: @item1.id, invoice_id: invoice2.id, quantity: 2, unit_price: 10.99)
