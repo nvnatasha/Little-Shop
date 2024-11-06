@@ -6,25 +6,20 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # Defines the root path route ("/")
-  # root "posts#index
-
-  get '/api/v1/merchants/find', to: 'api/v1/merchants#find'
-  get '/api/v1/items/find_all', to: 'api/v1/items#find_all'
-  get '/api/v1/items',     to: 'api/v1/items#index'
-  get '/api/v1/items/:id', to: 'api/v1/items#show'
-  post '/api/v1/items', to: 'api/v1/items#create'
-  patch '/api/v1/items/:id', to: 'api/v1/items#update'
-  get "/api/v1/merchants", to: "api/v1/merchants#index"
-  post "/api/v1/merchants", to: "api/v1/merchants#create"
-  get "/api/v1/merchants/:id", to: "api/v1/merchants#show"
-  patch "/api/v1/merchants/:id", to: "api/v1/merchants#update"
-  delete "/api/v1/merchants/:id", to: "api/v1/merchants#destroy"
-  get '/api/v1/merchants/:merchant_id/customers', to: 'api/v1/customers#index'
-  get '/api/v1/merchants/:merchant_id/customers/:id', to: 'api/v1/customers#show'
-  get '/api/v1/merchants/:merchant_id/invoices', to: 'api/v1/invoices#index'
-  get '/api/v1/invoices/:id', to: 'api/v1/invoices#show'  
-  get "/api/v1/customers/:customer_id/invoices", to: 'api/v1/invoices#index'
-  get "/api/v1/merchants/:id/items", to: 'api/v1/items#index'
-  get '/api/v1/items/:item_id/merchant', to: "api/v1/merchants#show"
-  delete '/api/v1/items/:id', to: 'api/v1/items#destroy'
+  # root "posts#index"
+  namespace :api do 
+    namespace :v1 do
+      resources :items do
+        get '/merchant', to: "merchants#show"
+      end
+      resources :merchants do
+        resources :invoices, only: [:index, :create]
+        resources :items, only: [:index]
+      end
+      resources :invoices, only: [:show]
+      resources :customers, except: [:index, :show, :create, :update, :destroy] do
+        resources :invoices, only: [:index]
+      end
+    end
+  end
 end

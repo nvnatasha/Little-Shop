@@ -87,6 +87,73 @@ RSpec.describe Item, type: :model do
     expect(InvoiceItem.count).to eq(0)
   end
 
+  describe 'validations' do
+    it 'is valid with valid attributes' do
+      item = Item.new(
+        name: "Catnip Toy",
+        description: "A soft toy filled with catnip.",
+        unit_price: 12.99,
+        merchant_id: @merchant.id
+      )
+      expect(item).to be_valid
+    end
+
+    it 'is invalid without a name' do
+      item = Item.new(
+        description: "A soft toy filled with catnip.",
+        unit_price: 12.99,
+        merchant_id: @merchant.id
+      )
+      expect(item).to_not be_valid
+      expect(item.errors[:name]).to include("can't be blank")
+    end
+
+    it 'is invalid without a description' do
+      item = Item.new(
+        name: "Catnip Toy",
+        unit_price: 12.99,
+        merchant_id: @merchant.id
+      )
+      expect(item).to_not be_valid
+      expect(item.errors[:description]).to include("can't be blank")
+    end
+
+    it 'is invalid without a unit_price' do
+      item = Item.new(
+        name: "Catnip Toy",
+        description: "A soft toy filled with catnip.",
+        merchant_id: @merchant.id
+      )
+      expect(item).to_not be_valid
+      expect(item.errors[:unit_price]).to include("can't be blank")
+    end
+
+    it 'is invalid with a negative unit_price' do
+      item = Item.new(
+        name: "Catnip Toy",
+        description: "A soft toy filled with catnip.",
+        unit_price: -5.00,
+        merchant_id: @merchant.id
+      )
+      expect(item).to_not be_valid
+      expect(item.errors[:unit_price]).to include("must be greater than or equal to 0")
+    end
+
+    it 'is invalid without a merchant_id' do
+      item = Item.new(
+        name: "Catnip Toy",
+        description: "A soft toy filled with catnip.",
+        unit_price: 12.99
+      )
+      expect(item).to_not be_valid
+      expect(item.errors[:merchant_id]).to include("can't be blank")
+    end
+  end
+
+  describe 'associations' do
+    it { should belong_to(:merchant) }
+    it { should have_many(:invoice_items).dependent(:destroy) }
+
   describe 'find_all' do
     it 'can find all items that match a name search query' do
       items = Item.find_all({ name: 'cat' })

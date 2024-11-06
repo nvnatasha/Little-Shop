@@ -1,24 +1,39 @@
 class Api::V1::ItemsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :not_found_response
   rescue_from ActiveRecord::RecordInvalid, with: :invalid_record_response
-
-
+  
   def index
     items = Item.getItems(params)
     if items.is_a?(String)
-      render json: {"message": "your query could not be completed", "errors": ["#{items}"]}, status: 404
+      render json: {  message: "your query could not be completed", errors: [items]  }, status: 404
     else
       render json: ItemSerializer.format_items(items)
     end
   end
 
   def show
-    item = Item.find(params[:id])
-    render json: ItemSerializer.format_single_item(item)
+    begin
+      item = Item.find(params[:id])
+      render json: ItemSerializer.format_single_item(item)
+    rescue ActiveRecord::RecordNotFound => error
+      error_response(error, :not_found) 
+    end
   end
 
   def create
       item = Item.create!(item_params)
+      render json: ItemSerializer.format_single_item(item), status: :created
+    rescue ActiveRecord::RecordInvalid => error
+      error_response(error, :unprocessable_entity) 
+    end
+  end
+  
+  def destroy
+    begin
+      Item.find(params[:id]).destroy
+      head :no_content
+    rescue ActiveRecord::RecordNotFound => error
+      error_response(error, :not_found) 
       render json: ItemSerializer.format_single_item(item), status: 201
   end
 
@@ -49,13 +64,13 @@ class Api::V1::ItemsController < ApplicationController
       render json: ItemSerializer.format_items(items)
     end
   end
-  
+
   private
 
   def item_params
     params.require(:item).permit(:name, :description, :unit_price, :merchant_id)
   end
-  
+
   def not_found_response(exception)
     render json: ErrorSerializer.format_error(exception, "404"), status: :not_found
   end  
