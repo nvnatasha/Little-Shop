@@ -90,4 +90,76 @@ RSpec.describe "Merchant Coupons API", type: :request do
         end
     end
 
+    describe 'GET /api/v1/merchants/:merchant_id/coupons/:id' do
+      it 'returns a specific coupon and shows a count of how many times it has been used' do
+        merchant = Merchant.create!(name: "cat store")
+        coupon = Coupon.create!(
+          name: "$10 off",
+          code: "10OFF",
+          discount_type: "dollar",
+          discount_value: 10,
+          status: true,
+          merchant_id: merchant.id
+        )
+
+        customer = Customer.create!(first_name: "Amalee", last_name: "Keunemany")
+        
+        3.times { Invoice.create!(
+          merchant_id: merchant.id, 
+          coupon: coupon, 
+          status: 'completed', 
+          customer: customer) }
+  
+        get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+        json_response = JSON.parse(response.body, symbolize_names: true)
+  
+        expect(response).to have_http_status(:ok)
+        expect(json_response[:data][:id]).to eq(coupon.id.to_s)
+        expect(json_response[:data][:type]).to eq("coupon")
+        expect(json_response[:data][:attributes][:name]).to eq("$10 off")
+        expect(json_response[:data][:attributes][:code]).to eq("10OFF")
+        expect(json_response[:data][:attributes][:discount_type]).to eq("dollar")
+        expect(json_response[:data][:attributes][:discount_value]).to eq(10)
+        expect(json_response[:data][:attributes][:status]).to be true
+        expect(json_response[:data][:attributes][:usage_count]).to eq(3) # usage count check
+      end
     
+
+    it 'returns a usage count of 0 if the coupon has not been used' do
+      merchant = Merchant.create!(name: "cat store")
+      coupon = Coupon.create!(
+        name: "Discount 10",
+        code: "DISC10",
+        discount_type: "dollar",
+        discount_value: 10,
+        status: true,
+        merchant_id: merchant.id
+      )
+    
+      get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+      json_response = JSON.parse(response.body, symbolize_names: true)
+    
+      expect(response).to have_http_status(:ok)
+      expect(json_response[:data][:attributes][:usage_count]).to eq(0) # no usage
+    end
+
+    it 'returns a 404 status if the coupon does not belong to the specified merchant' do
+      merchant = Merchant.create!(name: "cat store")
+      other_merchant = Merchant.create!(name: "dog store")
+      coupon = Coupon.create!(
+        name: "Discount 10",
+        code: "DISC10",
+        discount_type: "dollar",
+        discount_value: 10,
+        status: true,
+        merchant_id: other_merchant.id
+      )
+    
+      get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+      json_response = JSON.parse(response.body, symbolize_names: true)
+    
+      expect(response).to have_http_status(:not_found)
+      expect(json_response[:error]).to eq("Coupon not found")
+    end
+  end
+  

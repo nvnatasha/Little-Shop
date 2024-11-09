@@ -21,4 +21,8 @@ class Coupon < ApplicationRecord
     def toggle_status
       update(status: !status)
     end
+
+    def usage_count
+      invoices.count
+    end
   end
