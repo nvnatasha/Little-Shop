@@ -26,6 +26,23 @@ class Invoice < ApplicationRecord
     where(customer_id: customer_id)
   end
 
+  def calculate_total
+    merchant_items_total = items.where(merchant_id: coupon.merchant_id).sum(:price)
+
+    if coupon.present?
+      if coupon.discount_type == "dollar"
+        discounted_total = [merchant_items_total - coupon.discount_value, 0].max
+      elsif coupon.discount_type == "percent"
+        discounted_total = merchant_items_total * (1 - coupon.discount_value / 100.0)
+      end
+    else
+      discounted_total = merchant_items_total
+    end
+
+    update(total: discounted_total)
+  end
+
+
   private
 
   def set_default_status
