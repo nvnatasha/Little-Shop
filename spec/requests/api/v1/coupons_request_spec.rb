@@ -88,9 +88,8 @@ RSpec.describe "Merchant Coupons API", type: :request do
             expect(response.status).to eq(404)
         
         end
-    end
+    
 
-    describe 'GET /api/v1/merchants/:merchant_id/coupons/:id' do
       it 'returns a specific coupon and shows a count of how many times it has been used' do
         merchant = Merchant.create!(name: "cat store")
         coupon = Coupon.create!(
@@ -161,5 +160,77 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(response).to have_http_status(:not_found)
       expect(json_response[:error]).to eq("Coupon not found")
     end
+  
+  
+    it 'returns all coupons for a given merchant' do
+      # Create a merchant
+      merchant = Merchant.create!(name: "Cat Store")
+  
+      # Create multiple coupons for that merchant
+      coupon1 = Coupon.create!(
+        name: "Buy One Get One 50",
+        code: "BOGO50",
+        discount_type: "percent",
+        discount_value: 50,
+        status: true,
+        merchant_id: merchant.id
+      )
+      coupon2 = Coupon.create!(
+        name: "25 Percent Sale",
+        code: "SALE25",
+        discount_type: "percent",
+        discount_value: 25,
+        status: true,
+        merchant_id: merchant.id
+      )
+      coupon3 = Coupon.create!(
+        name: "$10 Off",
+        code: "10OFF",
+        discount_type: "dollar",
+        discount_value: 10,
+        status: false,
+        merchant_id: merchant.id
+      )
+  
+      # Make a GET request to fetch all coupons for this merchant
+      get "/api/v1/merchants/#{merchant.id}/coupons"
+      json_response = JSON.parse(response.body, symbolize_names: true)
+  
+      # Verify the response status and the coupon count
+      expect(response).to have_http_status(:ok)
+      expect(json_response[:data].length).to eq(3)  # Ensure we have 3 coupons in the response
+  
+      # Verify the attributes of each coupon in the response
+      expect(json_response[:data][0][:id]).to eq(coupon1.id.to_s)
+      expect(json_response[:data][0][:type]).to eq("coupon")
+      expect(json_response[:data][0][:attributes][:name]).to eq("Buy One Get One 50")
+      expect(json_response[:data][0][:attributes][:code]).to eq("BOGO50")
+      expect(json_response[:data][0][:attributes][:discount_type]).to eq("percent")
+      expect(json_response[:data][0][:attributes][:discount_value]).to eq(50)
+  
+      expect(json_response[:data][1][:id]).to eq(coupon2.id.to_s)
+      expect(json_response[:data][1][:type]).to eq("coupon")
+      expect(json_response[:data][1][:attributes][:name]).to eq("25 Percent Sale")
+      expect(json_response[:data][1][:attributes][:code]).to eq("SALE25")
+      expect(json_response[:data][1][:attributes][:discount_type]).to eq("percent")
+      expect(json_response[:data][1][:attributes][:discount_value]).to eq(25)
+  
+      expect(json_response[:data][2][:id]).to eq(coupon3.id.to_s)
+      expect(json_response[:data][2][:type]).to eq("coupon")
+      expect(json_response[:data][2][:attributes][:name]).to eq("$10 Off")
+      expect(json_response[:data][2][:attributes][:code]).to eq("10OFF")
+      expect(json_response[:data][2][:attributes][:discount_type]).to eq("dollar")
+      expect(json_response[:data][2][:attributes][:discount_value]).to eq(10)
+    end
+
+    it 'returns an empty array when the merchant has no coupons' do
+      merchant = Merchant.create!(name: "Empty Store")
+      get "/api/v1/merchants/#{merchant.id}/coupons"
+      json_response = JSON.parse(response.body, symbolize_names: true)
+    
+      expect(response).to have_http_status(:ok)
+      expect(json_response[:data]).to be_empty
+    end  
   end
+
   
