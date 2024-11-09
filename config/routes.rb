@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index
 
+  
   get '/api/v1/merchants/find', to: 'api/v1/merchants#find'
   get '/api/v1/items/find_all', to: 'api/v1/items#find_all'
 
@@ -36,7 +37,7 @@ Rails.application.routes.draw do
   get '/api/v1/merchants/:merchant_id/coupons', to: 'api/v1/coupons#index'
   get '/api/v1/merchants/:merchant_id/coupons/:id', to: 'api/v1/coupons#show'
   post '/api/v1/merchants/:merchant_id/coupons', to: 'api/v1/coupons#create'
-  patch '/api/v1/merchant_id/coupons/:id', to: 'api/v1/coupons#update'
+  patch '/api/v1/merchants/:merchant_id/coupons/:id', to: 'api/v1/coupons#update'
   patch '/api/v1/merchants/:merchant_id/coupons/:id/toggle_status', to: 'api/v1/coupons#toggle_status'
   delete '/api/v1/merchants/:merchant_id/coupons/:id', to: 'api/v1/coupons#destroy'
 end

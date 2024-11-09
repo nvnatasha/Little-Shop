@@ -163,10 +163,9 @@ RSpec.describe "Merchant Coupons API", type: :request do
   
   
     it 'returns all coupons for a given merchant' do
-      # Create a merchant
+     
       merchant = Merchant.create!(name: "Cat Store")
   
-      # Create multiple coupons for that merchant
       coupon1 = Coupon.create!(
         name: "Buy One Get One 50",
         code: "BOGO50",
@@ -192,15 +191,14 @@ RSpec.describe "Merchant Coupons API", type: :request do
         merchant_id: merchant.id
       )
   
-      # Make a GET request to fetch all coupons for this merchant
+
       get "/api/v1/merchants/#{merchant.id}/coupons"
       json_response = JSON.parse(response.body, symbolize_names: true)
   
-      # Verify the response status and the coupon count
+ 
       expect(response).to have_http_status(:ok)
-      expect(json_response[:data].length).to eq(3)  # Ensure we have 3 coupons in the response
-  
-      # Verify the attributes of each coupon in the response
+      expect(json_response[:data].length).to eq(3)  
+
       expect(json_response[:data][0][:id]).to eq(coupon1.id.to_s)
       expect(json_response[:data][0][:type]).to eq("coupon")
       expect(json_response[:data][0][:attributes][:name]).to eq("Buy One Get One 50")
@@ -232,5 +230,126 @@ RSpec.describe "Merchant Coupons API", type: :request do
       expect(json_response[:data]).to be_empty
     end  
   end
+
+    describe 'POST /api/v1/merchants/:merchant_id/coupons' do
+      it 'creates a new coupon for the merchant and returns the coupon details' do
+        merchant = Merchant.create!(name: "Cat store")
+        
+        coupon_params = {
+          coupon: {
+            name: "Buy One Get One 50",
+            code: "BOGO50",
+            discount_type: "dollar",
+            discount_value: 50,
+            status: true
+          }
+        }
+    
+        post "/api/v1/merchants/#{merchant.id}/coupons", params: coupon_params
+    
+        json_response = JSON.parse(response.body, symbolize_names: true)
+    
+        expect(response).to have_http_status(:created)
+        expect(json_response[:data][:type]).to eq("coupon")
+        expect(json_response[:data][:attributes][:name]).to eq("Buy One Get One 50")
+        expect(json_response[:data][:attributes][:code]).to eq("BOGO50")
+        expect(json_response[:data][:attributes][:discount_type]).to eq("dollar")
+        expect(json_response[:data][:attributes][:discount_value]).to eq(50)
+        expect(json_response[:data][:attributes][:status]).to be true
+      end
+
+      it 'returns an error when the coupon code is not unique' do
+        merchant = Merchant.create!(name: "Cat Store")
+ 
+        Coupon.create!(
+          name: "Existing Coupon",
+          code: "DUPLICATECODE",
+          discount_type: "percent",
+          discount_value: 10,
+          status: true,
+          merchant_id: merchant.id
+        )
+
+        coupon_params = {
+          coupon: {
+            name: "New Coupon",
+            code: "DUPLICATECODE",  
+            discount_type: "dollar",
+            discount_value: 15,
+            status: true
+          }
+        }
+    
+        post "/api/v1/merchants/#{merchant.id}/coupons", params: coupon_params
+    
+        json_response = JSON.parse(response.body, symbolize_names: true)
+    
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response[:error]).to eq("Code has already been taken")
+      end    
+end
+
+describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
+    it 'deactivates the coupon and returns the updated coupon' do
+    
+      merchant = Merchant.create!(name: 'Cat store')
+      coupon = Coupon.create!(
+        name: 'Buy One Get One 50',
+        code: 'BOGO50',
+        discount_value: 50,
+        discount_type: 'percent',
+        status: true,
+        merchant: merchant
+      )
+
+      patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+      json_response = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response[:data][:attributes][:status]).to eq(false)
+      expect(json_response[:data][:attributes][:name]).to eq(coupon.name)
+    end
+
+      it 'returns an error indicating the coupon cannot be deactivated' do
+       
+        merchant = Merchant.create!(name: 'Cat store')
+        coupon = Coupon.create!(
+          name: '$10 Off',
+          code: '10OFF',
+          discount_value: 10,
+          discount_type: 'dollar',
+          status: true,
+          merchant: merchant
+        )
+        pending_invoice = Invoice.create!(
+          merchant: merchant,
+          coupon: coupon,
+          status: 'pending',
+          customer: Customer.create!(first_name: "Amalee", last_name: "Keunemany") # Ensure a customer is created
+        )
+  
+        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response[:error]).to eq('Cannot deactivate coupon with pending invoices')
+      end
+
+      it 'returns a 404 status if the coupon does not exist' do
+       
+        merchant = Merchant.create!(name: 'Cat Store')
+
+        patch "/api/v1/merchants/#{merchant.id}/coupons/28" 
+        json_response = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(:not_found)
+        expect(json_response[:error]).to eq('Coupon not found')
+      end
+  
+    end
+
+
+
+
 
   

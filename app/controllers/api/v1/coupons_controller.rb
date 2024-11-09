@@ -23,23 +23,41 @@ class Api::V1::CouponsController < ApplicationController
 
     def create
       merchant = Merchant.find(params[:merchant_id])
-      coupon = merchant.coupons.new(coupon_params)
-
+      coupon = merchant.coupons.build(coupon_params)
+    
       if coupon.save
         render json: CouponSerializer.format_coupon(coupon), status: :created
       else
-        render json: { error: 'Coupon could not be created', details: coupon.errors.full_messages }, status: :unprocessable_entity
+        render json: { error: coupon.errors.full_messages.to_sentence }, status: :unprocessable_entity
       end
     end
+    
 
     def update
-      merchant = Merchant.find(params[:merchant_id])
-      coupon = merchant.coupons.find(params[:id])
+      
+      merchant = Merchant.find_by(id: params[:merchant_id])
+      
+      if merchant.nil?
+        render json: { error: 'Merchant not found' }, status: :not_found
+        return
+      end
 
-      if coupon.update(coupon_params)
-        render json: CouponSerializer.new(coupon).serializable_hash.to_json, status: :ok
+      coupon = merchant.coupons.find_by(id: params[:id])
+    
+      if coupon.nil?
+        render json: { error: 'Coupon not found' }, status: :not_found
+        return
+      end
+    
+      if coupon.invoices.where(status: 'pending').exists?
+        render json: { error: 'Cannot deactivate coupon with pending invoices' }, status: :unprocessable_entity
+        return
+      end
+    
+      if coupon.update(status: false)
+        render json: CouponSerializer.format_coupon(coupon), status: :ok
       else
-        render json: { error: 'Coupon could not be updated', details: coupon.errors.full_messages }, status: :unprocessable_entity
+        render json: { error: 'Coupon could not be deactivated' }, status: :unprocessable_entity
       end
     end
 
