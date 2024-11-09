@@ -3,6 +3,7 @@ class Merchant < ApplicationRecord
   has_many :invoices, dependent: :destroy
   has_many :items, dependent: :destroy
   has_many :customers
+  has_many :coupons
 
   def self.queried(params)
     merchants = Merchant.all
