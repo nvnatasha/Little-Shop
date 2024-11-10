@@ -345,8 +345,44 @@ describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
         expect(response).to have_http_status(:not_found)
         expect(json_response[:error]).to eq('Coupon not found')
       end
-  
+
+      it "activates an inactive coupon successfully" do
+        merchant = Merchant.create!(name: "Cat store")
+        coupon = merchant.coupons.create!(
+          name: "$10 off", 
+          code: "10OFF", 
+          discount_value: 10, 
+          discount_type: "dollar", 
+          status: false)
+
+        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:data][:id]).to eq(coupon.id.to_s)
+        expect(json_response[:data][:attributes][:status]).to eq(true)
+      end
+
+      it "returns an error when the coupon does not exist" do
+        merchant = Merchant.create!(name: "Cat store")
+
+        patch "/api/v1/merchants/#{merchant.id}/coupons/9999/activate"
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:error]).to eq("Coupon not found")
+      end
+
+      it "returns an error when the merchant does not exist" do
+        patch "/api/v1/merchants/9999/coupons/1/activate"
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body, symbolize_names: true)
+        expect(json_response[:error]).to eq("Merchant not found")
+      end
     end
+  
+    
 
 
 

@@ -39,5 +39,5 @@ Rails.application.routes.draw do
   post '/api/v1/merchants/:merchant_id/coupons', to: 'api/v1/coupons#create'
   patch '/api/v1/merchants/:merchant_id/coupons/:id', to: 'api/v1/coupons#update'
   patch '/api/v1/merchants/:merchant_id/coupons/:id/toggle_status', to: 'api/v1/coupons#toggle_status'
-  delete '/api/v1/merchants/:merchant_id/coupons/:id', to: 'api/v1/coupons#destroy'
+  patch '/api/v1/merchants/:merchant_id/coupons/:id/activate', to: 'api/v1/coupons#activate'
 end

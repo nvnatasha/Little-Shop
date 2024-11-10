@@ -34,7 +34,7 @@ class Api::V1::CouponsController < ApplicationController
     
 
     def update
-      
+
       merchant = Merchant.find_by(id: params[:merchant_id])
       
       if merchant.nil?
@@ -73,6 +73,26 @@ class Api::V1::CouponsController < ApplicationController
       coupon = merchant.coupons.find(params[:id])
       coupon.toggle!(:status)
       render json: CouponSerializer.new(coupon).serializable_hash.to_json, status: :ok
+    end
+
+    def activate
+      merchant = Merchant.find_by(id: params[:merchant_id])
+      unless merchant
+        render json: { error: 'Merchant not found' }, status: :not_found
+        return
+      end
+  
+      coupon = merchant.coupons.find_by(id: params[:id])
+      unless coupon
+        render json: { error: 'Coupon not found' }, status: :not_found
+        return
+      end
+  
+      if coupon.update(status: true)
+        render json: CouponSerializer.format_coupon(coupon), status: :ok
+      else
+        render json: { error: 'Coupon could not be activated' }, status: :unprocessable_entity
+      end
     end
 
     private
