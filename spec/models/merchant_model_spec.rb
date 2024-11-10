@@ -4,6 +4,7 @@ RSpec.describe Merchant, type: :model do
   describe "relationships" do
     it { should have_many(:items)}
     it { should have_many(:invoices)}
+    it { should have_many(:coupons) }
   end
 
   describe "validations" do
@@ -122,6 +123,70 @@ RSpec.describe Merchant, type: :model do
 
       expect(merchants.first.item_count).to eq(1) 
       expect(merchants.find_by(id: @merchant2.id).item_count).to eq(0)
+    end
+  end
+
+  describe 'coupon validation' do
+    it 'should allow creating a valid coupon' do
+      merchant = create(:merchant, name: 'Cat store')
+      valid_coupon = create(:coupon, merchant: merchant)
+
+      expect(valid_coupon).to be_valid
+    end
+    it 'should not allow creating a coupon without a name' do
+      merchant = create(:merchant, name: 'Cat store')
+      invalid_coupon = build(:coupon, name: nil, merchant: merchant)
+      
+      expect(invalid_coupon).not_to be_valid
+      expect(invalid_coupon.errors[:name]).to include("can't be blank")
+    end
+
+    it 'should not allow creating a coupon without a code' do
+      merchant = create(:merchant, name: 'Cat store')
+      invalid_coupon = build(:coupon, code: nil, merchant: merchant)
+      
+      expect(invalid_coupon).not_to be_valid
+      expect(invalid_coupon.errors[:code]).to include("can't be blank")
+    end
+
+    it 'should not allow creating a coupon without a discount_value' do
+      merchant = create(:merchant, name: 'Cat store')
+      invalid_coupon = build(:coupon, discount_value: nil, merchant: merchant)
+      
+      expect(invalid_coupon).not_to be_valid
+      expect(invalid_coupon.errors[:discount_value]).to include("can't be blank")
+    end
+
+    it 'should not allow creating a coupon with a negative discount_value' do
+      merchant = create(:merchant, name: 'Cat store')
+      invalid_coupon = build(:coupon, discount_value: -10, merchant: merchant)
+      
+      expect(invalid_coupon).not_to be_valid
+      expect(invalid_coupon.errors[:discount_value]).to include("must be greater than 0")
+    end
+
+    it 'should not allow creating a coupon with an invalid discount_type' do
+      merchant = create(:merchant, name: 'Cat store')
+      invalid_coupon = build(:coupon, discount_type: 'invalid_type', merchant: merchant)
+      
+      expect(invalid_coupon).not_to be_valid
+      expect(invalid_coupon.errors[:discount_type]).to include("is not included in the list")
+    end
+
+    it 'should not allow creating a coupon with a duplicate code' do
+      merchant = create(:merchant, name: 'Cat store')
+      create(:coupon, code: '10OFF', merchant: merchant)
+      duplicate_coupon = build(:coupon, code: '10OFF', merchant: merchant)
+      
+      expect(duplicate_coupon).not_to be_valid
+      expect(duplicate_coupon.errors[:code]).to include("has already been taken")
+    end
+
+    it 'should not allow creating a coupon without a merchant' do
+      invalid_coupon = build(:coupon, merchant: nil)
+      
+      expect(invalid_coupon).not_to be_valid
+      expect(invalid_coupon.errors[:merchant]).to include("must exist")
     end
   end
 end

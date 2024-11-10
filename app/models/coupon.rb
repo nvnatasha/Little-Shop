@@ -2,6 +2,7 @@ class Coupon < ApplicationRecord
     belongs_to :merchant
     has_many :invoices
 
+    validates :merchant, presence:{ message: "must exist" }
     validates :name, presence: true
     validates :code, presence: true, uniqueness: true
     validates :discount_value, presence: true, numericality: { greater_than: 0 }
@@ -13,10 +14,13 @@ class Coupon < ApplicationRecord
     scope :inactive, -> { where(status: false) }
   
     def active_coupon_limit
-      if merchant.coupons.active.count >= 5
-        errors.add(:base, "Merchant cannot have more than 5 active coupons.")
+        return if merchant.nil? # Return early if there's no merchant
+    
+        if merchant.coupons.active.count >= 5
+          errors.add(:merchant, "can't have more than 5 active coupons")
+        end
       end
-    end
+    
   
     def toggle_status
       update(status: !status)
