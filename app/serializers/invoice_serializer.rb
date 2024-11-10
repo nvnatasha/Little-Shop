@@ -9,6 +9,7 @@ class InvoiceSerializer
                         status: invoice.status,
                         merchant_id: invoice.merchant_id,
                         customer_id: invoice.customer_id
+                        coupon_id: invoice.coupon_id
                     }
                 }
             end,

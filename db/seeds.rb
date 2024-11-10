@@ -17,7 +17,7 @@ merchant1 = Merchant.create(
 )
 
 # Create Coupons for Cat Store
-merchant.coupons.create([
+merchant1.coupons.create([
   {
     name: "$10 Off",
     code: "10OFF",
@@ -53,7 +53,7 @@ merchant2 = Merchant.create(
   name: "Purrfect Cat Care",
 )
 
-merchant2t.coupons.create([
+merchant2.coupons.create([
   {
     name: "$15 Off",
     code: "15OFF",
@@ -70,6 +70,12 @@ merchant2t.coupons.create([
   }
 ])
 
-# Create an invoice and apply a coupon
-invoice = Invoice.create(customer_id: 1, coupon: coupon1)
-invoice.calculate_total
+coupon = Coupon.create(
+    name: "Cat things",
+    code: "10OFFCATSTUFF",
+    discount_type: "dollar",
+    discount_value: 10,
+    status: true
+)
+
+
