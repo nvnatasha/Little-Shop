@@ -139,7 +139,7 @@ RSpec.describe Coupon, type: :model do
     context "requires a unique code" do
     it 'is invalid with a non-unique code' do
       merchant = Merchant.create!(name: "cat store")
-      coupon1 = Coupon.create!(
+      coupon1 = Coupon.create(
       name: '$20 Off',
       code: '20OFF',
       discount_value: 20,

@@ -7,11 +7,20 @@ class Merchant < ApplicationRecord
 
   def self.queried(params)
     merchants = Merchant.all
-    
-    merchants = params[:sorted].present? ? Merchant.sort(params) : merchants
-    merchants = params[:count] == 'true' ? Merchant.with_item_count : merchants
-    
+  
+    # Add item count if needed
+    if params[:count] == 'true'
+      merchants = merchants.includes(:items)
+    end
+  
+    # Call the custom sort method for sorting/filtering
+    merchants = sort(params) if params[:sorted].present? || params[:status].present?
+  
     merchants
+  end
+
+  def item_count
+    items.count
   end
   
 
@@ -55,5 +64,7 @@ class Merchant < ApplicationRecord
     else
       { error: { message: "you need to specify a name", status: 404 } }
     end
+
+    
   end
 end

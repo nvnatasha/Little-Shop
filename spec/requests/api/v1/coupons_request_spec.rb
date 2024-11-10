@@ -165,7 +165,6 @@ RSpec.describe "Merchant Coupons API", type: :request do
     it 'returns all coupons for a given merchant' do
      
       merchant = Merchant.create!(name: "Cat Store")
-  
       coupon1 = Coupon.create!(
         name: "Buy One Get One 50",
         code: "BOGO50",

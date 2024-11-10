@@ -150,7 +150,6 @@ RSpec.describe "Merchants API" do
 
         get "/api/v1/merchants?count=true"
         expect(response).to be_successful
-        # binding.pry
         merchants = JSON.parse(response.body)
 
         expect(merchants["data"].count).to eq(4)

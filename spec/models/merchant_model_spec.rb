@@ -44,6 +44,11 @@ RSpec.describe Merchant, type: :model do
       expect(merchants[1].created_at).to be < (merchants[2].created_at)
       expect(merchants[2].created_at).to be < (merchants[3].created_at)
     end
+
+    it 'returns all merchants without sorting when an invalid sort parameter is given' do
+      merchants = Merchant.sort({ sorted: "unknown" })
+      expect(merchants).to match_array([@merchant1, @merchant2, @merchant3, @merchant4])
+    end
   end
 
   describe "dependent destroy" do
@@ -100,11 +105,23 @@ RSpec.describe Merchant, type: :model do
       expect(merchant.id).to eq(@merchant3.id)
     end
 
-    # it 'does not error when there are no matching merchants' do
-    #   merchant = Merchant.find_by_params({ name: 'abdul'})
-    #   expect(merchant).to eq([])
-    # end
-
+      it 'returns the merchant with a matching name if found' do
+        merchant = create(:merchant, name: 'Cat Store')
+        expect(Merchant.find_by_params({ name: 'Cat Store' })).to eq(merchant)
+      end
+    
+      it 'returns an error message if no merchant with the specified name is found' do
+        expect(Merchant.find_by_params({ name: 'Nonexistent Store' })).to eq(
+          error: { message: 'No merchant found', status: 404 }
+        )
+      end
+    
+      it 'returns an error message if name parameter is missing' do
+        expect(Merchant.find_by_params({})).to eq(
+          error: { message: 'you need to specify a name', status: 404 }
+        )
+      end
+ 
     it 'errors when a parameter is missing' do
       merchant = Merchant.find_by_params({})
       expect(merchant).to be_a(Hash)
@@ -136,8 +153,26 @@ RSpec.describe Merchant, type: :model do
       expect(merchant_with_count.item_count).to eq(3)
     end
   
+    it 'returns merchants with an item count of 0 if they have no items' do
+      merchant_without_items = create(:merchant)
+      result = Merchant.with_item_count.find(merchant_without_items.id)
+      expect(result.item_count).to eq(0)
+    end
   
+    it 'returns sorted merchants with item count when both count and sorted are true' do
+      merchant = create(:merchant)
+      create_list(:item, 3, merchant: merchant)  # Ensure 3 items for the merchant
+      result = Merchant.queried({ count: 'true', sorted: 'age' })
+      expect(result.first.item_count).to eq(3)  # Expects 3 items
+    end
   
+
+  it 'returns an error message if given a non-integer item_id' do
+    result = Merchant.getMerchant({ item_id: "invalid" })
+    expect(result).to eq("Couldn't find Item with 'id'=invalid")
+  end
+ 
+
     it 'should not allow creating a coupon without a code' do
       merchant = create(:merchant, name: 'Cat store')
       invalid_coupon = build(:coupon, code: nil, merchant: merchant)
@@ -207,4 +242,6 @@ RSpec.describe Merchant, type: :model do
       expect(Merchant.getMerchant({ id: -1 })).to eq("Couldn't find Merchant with 'id'=-1")
     end
   end
+
+  
 end
