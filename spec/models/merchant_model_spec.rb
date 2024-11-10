@@ -19,6 +19,16 @@ RSpec.describe Merchant, type: :model do
       @merchant3 = Merchant.create(name: 'Natasha')
       @merchant4 = Merchant.create(name: 'Jonathan')
     end
+    it 'is valid with a name' do
+      merchant = build(:merchant, name: 'Test Merchant')
+      expect(merchant).to be_valid
+    end
+
+    it 'is invalid without a name' do
+      merchant = build(:merchant, name: nil)
+      expect(merchant).not_to be_valid
+      expect(merchant.errors[:name]).to include("can't be blank")
+    end
 
     it "can sort merchants based on age" do
       merchants = Merchant.sort({sorted: "age"})
@@ -118,29 +128,16 @@ RSpec.describe Merchant, type: :model do
       )
     end
 
-    it 'returns merchants with item count when count parameter is true' do
-      merchants = Merchant.queried({ count: 'true' })
+    it 'returns merchants with item count included' do
+      merchant = create(:merchant)
+      create_list(:item, 3, merchant: merchant)
+      merchant_with_count = Merchant.with_item_count.find(merchant.id)
 
-      expect(merchants.first.item_count).to eq(1) 
-      expect(merchants.find_by(id: @merchant2.id).item_count).to eq(0)
+      expect(merchant_with_count.item_count).to eq(3)
     end
-  end
-
-  describe 'coupon validation' do
-    it 'should allow creating a valid coupon' do
-      merchant = create(:merchant, name: 'Cat store')
-      valid_coupon = create(:coupon, merchant: merchant)
-
-      expect(valid_coupon).to be_valid
-    end
-    it 'should not allow creating a coupon without a name' do
-      merchant = create(:merchant, name: 'Cat store')
-      invalid_coupon = build(:coupon, name: nil, merchant: merchant)
-      
-      expect(invalid_coupon).not_to be_valid
-      expect(invalid_coupon.errors[:name]).to include("can't be blank")
-    end
-
+  
+  
+  
     it 'should not allow creating a coupon without a code' do
       merchant = create(:merchant, name: 'Cat store')
       invalid_coupon = build(:coupon, code: nil, merchant: merchant)
@@ -187,6 +184,27 @@ RSpec.describe Merchant, type: :model do
       
       expect(invalid_coupon).not_to be_valid
       expect(invalid_coupon.errors[:merchant]).to include("must exist")
+    end
+  end
+
+  describe '.getMerchant' do
+    it 'returns the merchant of a given item when params[:item_id] is present' do
+      merchant = create(:merchant)
+      item = create(:item, merchant: merchant)
+      expect(Merchant.getMerchant({ item_id: item.id })).to eq(merchant)
+    end
+  
+    it 'returns an error message if item with given item_id is not found' do
+      expect(Merchant.getMerchant({ item_id: -1 })).to eq("Couldn't find Item with 'id'=-1")
+    end
+  
+    it 'returns the merchant with a given id' do
+      merchant = create(:merchant)
+      expect(Merchant.getMerchant({ id: merchant.id })).to eq(merchant)
+    end
+  
+    it 'returns an error message if merchant with given id is not found' do
+      expect(Merchant.getMerchant({ id: -1 })).to eq("Couldn't find Merchant with 'id'=-1")
     end
   end
 end

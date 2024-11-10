@@ -7,10 +7,13 @@ class Merchant < ApplicationRecord
 
   def self.queried(params)
     merchants = Merchant.all
-    merchants = Merchant.sort(params)
+    
+    merchants = params[:sorted].present? ? Merchant.sort(params) : merchants
     merchants = params[:count] == 'true' ? Merchant.with_item_count : merchants
+    
     merchants
   end
+  
 
   def self.sort(params)
     if params[:sorted] == "age"

@@ -42,7 +42,7 @@ group :development, :test do
   gem "debug", platforms: %i[ mri windows ]
   gem 'simplecov', require: false, group: :test
   gem "pry"
-  gem 'rspec-rails'
+  gem 'rspec-rails', group: :test
   gem "shoulda-matchers"
   gem "factory_bot_rails"
 end
