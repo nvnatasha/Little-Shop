@@ -39,9 +39,7 @@ class Api::V1::MerchantsController < ApplicationController
 
   def find
     merchant = Merchant.find_by_params(params)
-    # if merchant.is_a?(Hash)
-    #   render json: {"message": "your query could not be completed", "errors": ["#{merchant}"]}, status: 404
-    # elsif  
+ 
     if merchant.is_a?(Hash) && merchant[:error]
       render json: { data: { message: "no merchant found", errors: [merchant.to_s], status: 200 } }, status: 200
     else

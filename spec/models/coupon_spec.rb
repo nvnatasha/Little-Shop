@@ -51,7 +51,7 @@ RSpec.describe Coupon, type: :model do
           merchant: merchant
         )
         expect(coupon).to be_invalid
-        expect(coupon.errors[:base]).to include("Merchant cannot have more than 5 active coupons.")
+        expect(coupon.errors[:base]).to include("Merchant can't have more than 5 active coupons")
       end
     end
   

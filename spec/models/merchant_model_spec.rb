@@ -161,9 +161,9 @@ RSpec.describe Merchant, type: :model do
   
     it 'returns sorted merchants with item count when both count and sorted are true' do
       merchant = create(:merchant)
-      create_list(:item, 3, merchant: merchant)  # Ensure 3 items for the merchant
+      create_list(:item, 3, merchant: merchant) 
       result = Merchant.queried({ count: 'true', sorted: 'age' })
-      expect(result.first.item_count).to eq(3)  # Expects 3 items
+      expect(result.first.item_count).to eq(3) 
     end
   
 

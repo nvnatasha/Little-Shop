@@ -3,10 +3,9 @@ require 'rails_helper'
 RSpec.describe "Merchant Coupons API", type: :request do
     describe "GET /api/v1/merchants/:merchant_id/coupons/:id" do
         it "returns a specific coupon for a merchant" do
-          # Create a merchant
+      
         merchant = Merchant.create!(name: "cat store")
     
-          # Create a coupon associated with the merchant
         coupon = Coupon.create!(
             name: "Buy One Get One 50",
             code: "BOGO50",
@@ -16,16 +15,14 @@ RSpec.describe "Merchant Coupons API", type: :request do
             merchant_id: merchant.id
         )
     
-          # Send GET request to fetch the coupon
-        get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
-    
-          # Check the response status
+        get "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"  
+ 
         expect(response).to have_http_status(:ok)
     
-          # Parse the JSON response
+      
         json_response = JSON.parse(response.body, symbolize_names: true)
     
-          # Test the attributes
+        
         expect(json_response[:data][:id]).to eq(coupon.id.to_s)
         expect(json_response[:data][:type]).to eq("coupon")
         expect(json_response[:data][:attributes][:name]).to eq("Buy One Get One 50")
@@ -120,7 +117,7 @@ RSpec.describe "Merchant Coupons API", type: :request do
         expect(json_response[:data][:attributes][:discount_type]).to eq("dollar")
         expect(json_response[:data][:attributes][:discount_value]).to eq(10)
         expect(json_response[:data][:attributes][:status]).to be true
-        expect(json_response[:data][:attributes][:usage_count]).to eq(3) # usage count check
+        expect(json_response[:data][:attributes][:usage_count]).to eq(3) 
       end
     
 
@@ -139,7 +136,7 @@ RSpec.describe "Merchant Coupons API", type: :request do
       json_response = JSON.parse(response.body, symbolize_names: true)
     
       expect(response).to have_http_status(:ok)
-      expect(json_response[:data][:attributes][:usage_count]).to eq(0) # no usage
+      expect(json_response[:data][:attributes][:usage_count]).to eq(0) 
     end
 
     it 'returns a 404 status if the coupon does not belong to the specified merchant' do
@@ -163,7 +160,7 @@ RSpec.describe "Merchant Coupons API", type: :request do
   
   
     it 'returns all coupons for a given merchant' do
-     
+  
       merchant = Merchant.create!(name: "Cat Store")
       coupon1 = Coupon.create!(
         name: "Buy One Get One 50",

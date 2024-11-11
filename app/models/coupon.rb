@@ -14,17 +14,13 @@ class Coupon < ApplicationRecord
     scope :inactive, -> { where(status: false) }
   
     def active_coupon_limit
-        return if merchant.nil? # Return early if there's no merchant
+      return if merchant.nil? 
     
-        if merchant.coupons.active.count >= 5
-          errors.add(:merchant, "can't have more than 5 active coupons")
-        end
+      if merchant.coupons.active.count >= 5
+        errors.add(:base, "Merchant can't have more than 5 active coupons") 
       end
-    
-  
-    def toggle_status
-      update(status: !status)
     end
+    
 
     def usage_count
       invoices.count

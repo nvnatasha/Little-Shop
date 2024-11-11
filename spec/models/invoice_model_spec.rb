@@ -61,7 +61,6 @@ RSpec.describe Invoice, type: :model do
         merchant = create(:merchant)
         coupon = create(:coupon, merchant: merchant)
       
-        # Create the invoice without a customer
         invoice = create(:invoice, merchant: merchant, coupon: coupon)
       
         expect(invoice).to be_valid
@@ -104,7 +103,5 @@ RSpec.describe Invoice, type: :model do
       end
     end
   end
-
-  
 end
       

@@ -61,20 +61,6 @@ class Api::V1::CouponsController < ApplicationController
       end
     end
 
-    def destroy
-      merchant = Merchant.find(params[:merchant_id])
-      coupon = merchant.coupons.find(params[:id])
-      coupon.destroy
-      head :no_content
-    end
-
-    def toggle_status
-      merchant = Merchant.find(params[:merchant_id])
-      coupon = merchant.coupons.find(params[:id])
-      coupon.toggle!(:status)
-      render json: CouponSerializer.new(coupon).serializable_hash.to_json, status: :ok
-    end
-
     def activate
       merchant = Merchant.find_by(id: params[:merchant_id])
       unless merchant

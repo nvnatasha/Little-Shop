@@ -7,13 +7,11 @@ class Merchant < ApplicationRecord
 
   def self.queried(params)
     merchants = Merchant.all
-  
-    # Add item count if needed
+
     if params[:count] == 'true'
       merchants = merchants.includes(:items)
     end
   
-    # Call the custom sort method for sorting/filtering
     merchants = sort(params) if params[:sorted].present? || params[:status].present?
   
     merchants
@@ -57,14 +55,12 @@ class Merchant < ApplicationRecord
       .group("merchants.id")
   end
 
-  def self.find_by_params(params) #is this redundant with self.getMerchant? Not at 2:48am it isn't but something to look at refactoring
+  def self.find_by_params(params)
     if params.has_key?(:name) && params[:name].present?
       merchant = Merchant.where('name ILIKE ?', "%#{params[:name]}%").first
       merchant || { error: { message: "No merchant found", status: 404 } }
     else
       { error: { message: "you need to specify a name", status: 404 } }
     end
-
-    
   end
 end
