@@ -4,8 +4,9 @@ class Api::V1::MerchantsController < ApplicationController
 
   def index
     merchants = Merchant.queried(params).order(:id)
+  
     if params[:count] == 'true'
-      render json: MerchantSerializer.format_with_item_count(merchants)
+      render json: MerchantSerializer.format_with_counts(merchants)
     else
       render json: MerchantSerializer.new(merchants)
     end

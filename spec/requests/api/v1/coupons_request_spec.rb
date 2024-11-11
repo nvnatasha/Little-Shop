@@ -321,7 +321,7 @@ describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
           merchant: merchant,
           coupon: coupon,
           status: 'pending',
-          customer: Customer.create!(first_name: "Amalee", last_name: "Keunemany") # Ensure a customer is created
+          customer: Customer.create!(first_name: "Amalee", last_name: "Keunemany")
         )
   
         patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
@@ -376,12 +376,210 @@ describe 'PATCH /api/v1/merchants/:merchant_id/coupons/:id' do
         json_response = JSON.parse(response.body, symbolize_names: true)
         expect(json_response[:error]).to eq("Merchant not found")
       end
+
+        it 'returns a not found status with an error message' do
+          merchant = Merchant.create!(name: "Cat Store")
+          coupon = merchant.coupons.create!(
+            name: "10% off Cat Treats",
+            code: "CAT10",
+            discount_value: 10,
+            discount_type: "percent",
+            status: true
+          )
+
+        patch "/api/v1/merchants/99999/coupons/#{coupon.id}"
+  
+          # Test the response status and JSON error message
+          expect(response).to have_http_status(:not_found)
+          expect(JSON.parse(response.body)['error']).to eq('Merchant not found')
+        end
+
+describe "GET /api/v1/merchants/:merchant_id/coupons" do
+    context "when filtered by active status" do
+      it "returns only active coupons" do
+        merchant = Merchant.create!(name: "Cat Store")
+        active_coupon = merchant.coupons.create!(
+          name: "10% off Cat Treats",
+          code: "CAT10",
+          discount_value: 10,
+          discount_type: "percent",
+          status: true
+        )
+        inactive_coupon = merchant.coupons.create!(
+          name: "$5 off Cat Beds",
+          code: "CATBED5",
+          discount_value: 5,
+          discount_type: "dollar",
+          status: false
+        )
+
+
+        get "/api/v1/merchants/#{merchant.id}/coupons", params: { status: true }
+
+        response_json = JSON.parse(response.body)
+
+        expect(response).to have_http_status(:success)
+        expect(response_json['data'].size).to eq(1)
+        expect(response_json['data'].first['attributes']['status']).to eq(true)
+      end
     end
-  
+
+    context "when filtered by inactive status" do
+      it "returns only inactive coupons" do
+        merchant = Merchant.create!(name: "Cat Store")
+        active_coupon = merchant.coupons.create!(
+          name: "10% off Cat Treats",
+          code: "CAT10",
+          discount_value: 10,
+          discount_type: "percent",
+          status: true
+        )
+        inactive_coupon = merchant.coupons.create!(
+          name: "$5 off Cat Beds",
+          code: "CATBED5",
+          discount_value: 5,
+          discount_type: "dollar",
+          status: false
+        )
+
+        get "/api/v1/merchants/#{merchant.id}/coupons", params: { status: false }
+
+        response_json = JSON.parse(response.body)
+        expect(response).to have_http_status(:success)
+        expect(response_json['data'].size).to eq(1)
+        expect(response_json['data'].first['attributes']['status']).to eq(false)
+      end
+    end
+
+    context "when status filter is invalid" do
+      it "returns an error" do
+        merchant = Merchant.create!(name: "Cat Store")
+        active_coupon = merchant.coupons.create!(
+          name: "10% off Cat Treats",
+          code: "CAT10",
+          discount_value: 10,
+          discount_type: "percent",
+          status: true
+        )
+        inactive_coupon = merchant.coupons.create!(
+          name: "$5 off Cat Beds",
+          code: "CATBED5",
+          discount_value: 5,
+          discount_type: "dollar",
+          status: false
+        )
+
+        get "/api/v1/merchants/#{merchant.id}/coupons", params: { status: 'invalid_status' }
+
+        response_json = JSON.parse(response.body)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response_json['error']).to eq('Invalid status filter')
+      end
+    end
+
+    context "when no status filter is passed" do
+      it "returns all coupons" do
+        merchant = Merchant.create!(name: "Cat Store")
+        active_coupon = merchant.coupons.create!(
+          name: "10% off Cat Treats",
+          code: "CAT10",
+          discount_value: 10,
+          discount_type: "percent",
+          status: true
+        )
+        inactive_coupon = merchant.coupons.create!(
+          name: "$5 off Cat Beds",
+          code: "CATBED5",
+          discount_value: 5,
+          discount_type: "dollar",
+          status: false
+        )
+
+        get "/api/v1/merchants/#{merchant.id}/coupons"
+
+        response_json = JSON.parse(response.body)
+        expect(response).to have_http_status(:success)
+        expect(response_json['data'].size).to eq(2)
+      end
+    end
     
+      context 'when coupon is successfully activated' do
+        it 'returns a successful activation message with status 200' do
+       
+          merchant = Merchant.create(name: 'Merchant')
+          coupon = merchant.coupons.create!(
+            name: "10% off Cat Treats",
+            code: "CAT10",
+            discount_value: 10,
+            discount_type: "percent",
+            status: true
+          )
+    
+          patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
+    
+          expect(response).to have_http_status(:ok)
+          expect(JSON.parse(response.body)['data']['attributes']['status']).to eq(true)
+        end
+      end
+    end
 
-
-
-
-
+    describe 'PATCH #activate' do
+    context 'when coupon is successfully activated' do
+      it 'activates the coupon and returns status 200' do
+        merchant = create(:merchant)
+        coupon = create(:coupon, merchant: merchant)
   
+       patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
+  
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)['data']).to include('id' => coupon.id.to_s)
+      end
+    end
+  end
+  
+  describe 'PATCH #activate' do
+    context 'when coupon cannot be activated' do
+      it 'returns an error message with status 422' do
+        merchant = create(:merchant)
+        coupon = create(:coupon, merchant: merchant, status: false)
+        
+        allow_any_instance_of(Coupon).to receive(:update).and_return(false)
+  
+         patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}/activate"
+  
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)['error']).to eq('Coupon could not be activated')
+      end
+    end
+  end
+  
+  describe 'PATCH #update' do
+    context 'when coupon is successfully deactivated' do
+      it 'deactivates the coupon and returns status 200' do
+        merchant = create(:merchant)
+        coupon = create(:coupon, merchant: merchant, status: true)
+  
+       patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+  
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)['data']).to include('id' => coupon.id.to_s)
+      end
+    end
+  end
+  
+  describe 'PATCH #update' do
+    context 'when coupon cannot be deactivated' do
+      it 'returns an error message with status 422' do
+        merchant = create(:merchant)
+        coupon = create(:coupon, merchant: merchant, status: true)
+        
+        allow_any_instance_of(Coupon).to receive(:update).and_return(false)
+  
+        patch "/api/v1/merchants/#{merchant.id}/coupons/#{coupon.id}"
+  
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)['error']).to eq('Coupon could not be deactivated')
+      end
+    end
+  end
+end

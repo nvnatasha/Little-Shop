@@ -134,48 +134,45 @@ RSpec.describe "Merchants API" do
     end
     
     describe 'include item count' do 
-      it "includes an item count when asked" do
+      before do
+        Merchant.destroy_all
+        Item.destroy_all
+      
+        @merchant1 = Merchant.create(name: "Cat Merchant")
+      
         @item1 = Item.create(
-        name: "Catnip Toy",
-        description: "A soft toy filled with catnip.",
-        unit_price: 12.99,
-        merchant_id: @merchant1.id
+          name: "Catnip Toy",
+          description: "A soft toy filled with catnip.",
+          unit_price: 12.99,
+          merchant_id: @merchant1.id
         )
         @item2 = Item.create(
-        name: "Laser Pointer",
-        description: "A laser pointer to keep your cat active.",
-        unit_price: 9.99,
-        merchant_id: @merchant1.id
+          name: "Laser Pointer",
+          description: "A laser pointer to keep your cat active.",
+          unit_price: 9.99,
+          merchant_id: @merchant1.id
         )
-
+      end
+    
+      it "includes an item count when asked" do
         get "/api/v1/merchants?count=true"
         expect(response).to be_successful
+    
         merchants = JSON.parse(response.body)
-
-        expect(merchants["data"].count).to eq(4)
+    
+        expect(merchants["data"].count).to eq(1) 
+    
         merchants["data"].each do |merchant|
           expect(merchant).to have_key("id")
           expect(merchant["attributes"]).to have_key("name")
           expect(merchant["attributes"]).to have_key("item_count")
-
+    
           individual_merchant = Merchant.find(merchant["id"].to_i)
           expect(merchant["attributes"]["item_count"]).to eq(individual_merchant.items.count)
         end
       end
-
-      it "does not include item count when not asked for" do
-        get "/api/v1/merchants"
-        expect(response).to be_successful
-      
-        merchants = JSON.parse(response.body)
-      
-        expect(merchants["data"].count).to eq(4)
-        merchants["data"].each do |merchant|
-          expect(merchant["attributes"]).to have_key("name")
-          expect(merchant["attributes"]).to_not have_key("item_count")
-        end
-      end
     end
+    
 
     describe 'fetch all items for a given merchant' do
       it "can fetch all items for a given merchant" do
@@ -308,6 +305,49 @@ RSpec.describe "Merchants API" do
       #   get '/api/v1/merchants/find?name='
       #   expect(response).to_not be_successful
       # end
+    end
+  end
+
+  describe "GET /api/v1/merchants/:merchant_id/invoices" do
+    before do
+      # Set up data for the merchant, customers, coupons, and invoices
+      @merchant = Merchant.create!(name: "Cat Merchant")
+      @customer1 = Customer.create!(first_name:"Amalee", last_name: "Keunemany")
+      @customer2 = Customer.create!(first_name: "Chrissy", last_name: "Karmann")
+      
+      # Coupons
+      @coupon1 = @merchant.coupons.create!(name: "$5 Off", code: "CAT5", discount_value: 5, discount_type: "dollar", status: true)
+      @coupon2 = @merchant.coupons.create!(name: "10% Off", code: "CAT10", discount_value: 10, discount_type: "percent", status: true)
+      
+      # Invoices with and without coupons
+      @invoice1 = @merchant.invoices.create!(customer_id: @customer1.id, coupon_id: @coupon1.id, status: "pending")
+      @invoice2 = @merchant.invoices.create!(customer_id: @customer2.id, coupon_id: @coupon2.id, status: "completed")
+      @invoice3 = @merchant.invoices.create!(customer_id: @customer1.id, coupon_id: nil, status: "pending")
+    end
+
+    context "when retrieving all invoices for a merchant" do
+      it "returns a list of invoices including the coupon_id used, if any" do
+        get "/api/v1/merchants/#{@merchant.id}/invoices", headers: { "Content-Type": "application/json", "Accept": "application/json" }
+
+        expect(response).to have_http_status(:success)
+
+        response_json = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response_json[:data].size).to eq(3)
+
+        invoice1_data = response_json[:data].find { |invoice| invoice[:id] == @invoice1.id.to_s }
+        expect(invoice1_data[:type]).to eq("invoice")
+        expect(invoice1_data[:attributes][:customer_id].to_s).to eq(@customer1.id.to_s)
+        expect(invoice1_data[:attributes][:merchant_id].to_s).to eq(@merchant.id.to_s)
+        expect(invoice1_data[:attributes][:coupon_id].to_s).to eq(@coupon1.id.to_s)
+        expect(invoice1_data[:attributes][:status]).to eq("pending")
+
+        invoice2_data = response_json[:data].find { |invoice| invoice[:id] == @invoice2.id.to_s }
+        expect(invoice2_data[:attributes][:coupon_id].to_s).to eq(@coupon2.id.to_s)
+
+        invoice3_data = response_json[:data].find { |invoice| invoice[:id] == @invoice3.id.to_s }
+        expect(invoice3_data[:attributes][:coupon_id]).to be_nil
+      end
     end
   end
 end

@@ -64,3 +64,11 @@ class Merchant < ApplicationRecord
     end
   end
 end
+
+def coupons_count
+  coupons.count
+end
+
+def invoice_coupon_count
+  invoices.where.not(coupon_id: nil).count
+end

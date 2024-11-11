@@ -1,9 +1,20 @@
 class Api::V1::CouponsController < ApplicationController
     rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
-
     def index
       merchant = Merchant.find(params[:merchant_id])
-      coupons = merchant.coupons
+      if params[:status].present?
+ 
+        if params[:status] == 'true' || params[:status] == 'false'
+          status = ActiveModel::Type::Boolean.new.cast(params[:status]) # Casts to true/false
+          coupons = merchant.coupons.where(status: status)
+        else
+          render json: { error: 'Invalid status filter' }, status: :unprocessable_entity
+          return
+        end
+      else
+        coupons = merchant.coupons
+      end
+    
       render json: CouponSerializer.format_coupons(coupons), status: :ok
     end
 
