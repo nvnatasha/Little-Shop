@@ -103,6 +103,41 @@ RSpec.describe Invoice, type: :model do
       end
     end
   end
+
+  describe '#calculate_total' do
+  it 'sets the merchant total to $0 if the coupon’s discount exceeds the total cost of merchant items' do
+
+    merchant = Merchant.create!(name: "cat store")
+    
+
+    coupon = Coupon.create!(
+      name: "$15 Off",
+      code: "15OFF",
+      discount_type: "dollar",
+      discount_value: 15, 
+      status: true,
+      merchant_id: merchant.id
+    )
+    
+    item1 = Item.create!(name: "item1", description: "something for cats", unit_price: 5, merchant: merchant)
+    item2 = Item.create!(name: "item2", description: "something for cats", unit_price: 3, merchant: merchant)
+    
+    invoice = Invoice.create!(merchant: merchant, customer: Customer.create!(first_name: "Amalee", last_name: "Keunemany"), coupon: coupon)
+
+
+    invoice_item1 = InvoiceItem.create!(item: item1, invoice: invoice, quantity: 1, unit_price: 5)
+    invoice_item2 = InvoiceItem.create!(item: item2, invoice: invoice, quantity: 2, unit_price: 3)
+
+
+    invoice.invoice_items << [invoice_item1, invoice_item2]
+
+    total = invoice.calculate_total
+
+    expect(total).to eq(0)
+  end
 end
+end
+
+
 
       
