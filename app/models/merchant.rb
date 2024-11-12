@@ -13,7 +13,6 @@ class Merchant < ApplicationRecord
     end
   
     merchants = sort(params) if params[:sorted].present? || params[:status].present?
-  
     merchants
   end
 
@@ -63,12 +62,12 @@ class Merchant < ApplicationRecord
       { error: { message: "you need to specify a name", status: 404 } }
     end
   end
-end
 
-def coupons_count
-  coupons.count
-end
+  def coupons_count
+    coupons.count
+  end
 
-def invoice_coupon_count
-  invoices.where.not(coupon_id: nil).count
+  def invoice_coupon_count
+    invoices.where.not(coupon_id: nil).count
+  end
 end

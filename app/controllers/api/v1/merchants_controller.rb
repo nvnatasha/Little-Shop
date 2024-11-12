@@ -6,9 +6,19 @@ class Api::V1::MerchantsController < ApplicationController
     merchants = Merchant.queried(params).order(:id)
   
     if params[:count] == 'true'
-      render json: MerchantSerializer.format_with_counts(merchants)
+      render json: MerchantSerializer.format_with_item_counts(merchants)
     else
-      render json: MerchantSerializer.new(merchants)
+      render json: merchants.map { |merchant| 
+      {
+        id: merchant.id,
+        type: 'merchant',
+        attributes: {
+          name: merchant.name,
+          coupons_count: merchant.coupons_count,
+          invoice_coupon_count: merchant.invoice_coupon_count
+        }
+      }
+    }
     end
   end
 
