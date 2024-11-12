@@ -63,6 +63,16 @@ class Merchant < ApplicationRecord
     end
   end
 
+  def coupons_filtered_by_status(status = nil)
+    if status == 'active'
+      coupons.where(active: true) # Assuming you have an 'active' attribute in your coupons table
+    elsif status == 'inactive'
+      coupons.where(active: false) # Assuming inactive coupons have active: false
+    else
+      coupons # Return all coupons if no status is specified
+    end
+  end
+
   def coupons_count
     coupons.count
   end

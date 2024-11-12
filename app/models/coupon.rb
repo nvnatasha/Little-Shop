@@ -21,7 +21,6 @@ class Coupon < ApplicationRecord
       end
     end
     
-
     def usage_count
       invoices.count
     end

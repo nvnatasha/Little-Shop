@@ -79,4 +79,18 @@ class Api::V1::MerchantsController < ApplicationController
       status: status
     }
   end
+
+  def coupons_with_status(merchant)
+    status = params[:status]
+    merchant.coupons_filtered_by_status(status).map do |coupon|
+      {
+        id: coupon.id,
+        name: coupon.name,
+        code: coupon.code,
+        discount_type: coupon.discount_type,
+        discount_value: coupon.discount_value,
+        status: coupon.active ? 'active' : 'inactive'  # Assuming 'active' is a boolean field
+      }
+    end
+  end
 end
