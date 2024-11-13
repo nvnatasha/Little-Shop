@@ -15,7 +15,7 @@ RSpec.describe "Merchants API" do
         get "/api/v1/merchants"
         expect(response).to be_successful
         merchants = JSON.parse(response.body)
-        binding.pry
+     
         expect(merchants.count).to eq(4)
 
         merchants.each do |merchant|
@@ -311,16 +311,16 @@ RSpec.describe "Merchants API" do
 
   describe "GET /api/v1/merchants/:merchant_id/invoices" do
     before do
-      # Set up data for the merchant, customers, coupons, and invoices
+    
       @merchant = Merchant.create!(name: "Cat Merchant")
       @customer1 = Customer.create!(first_name:"Amalee", last_name: "Keunemany")
       @customer2 = Customer.create!(first_name: "Chrissy", last_name: "Karmann")
       
-      # Coupons
+      
       @coupon1 = @merchant.coupons.create!(name: "$5 Off", code: "CAT5", discount_value: 5, discount_type: "dollar", status: true)
       @coupon2 = @merchant.coupons.create!(name: "10% Off", code: "CAT10", discount_value: 10, discount_type: "percent", status: true)
       
-      # Invoices with and without coupons
+     
       @invoice1 = @merchant.invoices.create!(customer_id: @customer1.id, coupon_id: @coupon1.id, status: "pending")
       @invoice2 = @merchant.invoices.create!(customer_id: @customer2.id, coupon_id: @coupon2.id, status: "completed")
       @invoice3 = @merchant.invoices.create!(customer_id: @customer1.id, coupon_id: nil, status: "pending")
@@ -351,4 +351,124 @@ RSpec.describe "Merchants API" do
       end
     end
   end
+
+  describe 'GET /merchants' do
+    context 'when there is a valid count parameter' do
+      it 'returns merchants with coupon counts' do
+        merchant1 = Merchant.create(name: "The Cat Store")
+        merchant1.coupons.create([
+          { name: "$10 Off", code: "10OFF", discount_type: "dollar", discount_value: 10, status: true },
+          { name: "25% Off", code: "25PERCENT", discount_type: "percent", discount_value: 25, status: true }
+        ])
+
+        get '/api/v1/merchants', params: { count: 'true' }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("The Cat Store")
+      end
+    end
+
+    context 'when there is no count parameter' do
+      it 'returns a list of merchants' do
+        merchant1 = Merchant.create(name: "The Cat Store")
+        merchant1.coupons.create([
+          { name: "$10 Off", code: "10OFF", discount_type: "dollar", discount_value: 10, status: true }
+        ])
+
+        get '/api/v1/merchants' 
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("The Cat Store")
+        expect(response.body).to include("coupons_count")
+      end
+    end
+  end
+
+  describe '#coupons_with_status' do
+    context 'when there is a valid status parameter' do
+      it 'returns active coupons for merchant1' do
+        merchant1 = Merchant.create(name: "The Cat Store")
+        merchant1.coupons.create([
+          { name: "$10 Off", code: "10OFF", discount_type: "dollar", discount_value: 10, status: true },
+          { name: "25% Off", code: "25PERCENT", discount_type: "percent", discount_value: 25, status: true }
+        ])
+
+        get "/api/v1/merchants/#{merchant1.id}/coupons", params: { status: true }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("$10 Off")
+        expect(response.body).to include("25% Off")
+        expect(response.body).to include("true")
+      end
+    end
+
+    context 'there is no status parameter' do
+      it 'returns all coupons for merchant1' do
+        merchant1 = Merchant.create(name: "The Cat Store")
+        merchant1.coupons.create([
+          { name: "$10 Off", code: "10OFF", discount_type: "dollar", discount_value: 10, status: true },
+          { name: "25% Off", code: "25PERCENT", discount_type: "percent", discount_value: 25, status: true }
+        ])
+
+        get "/api/v1/merchants/#{merchant1.id}/coupons" 
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("$10 Off")
+        expect(response.body).to include("25% Off")
+        expect(response.body).to include("true")
+      end
+    end
+  end
+  describe '#coupons_filtered_by_status' do
+  it 'returns only active coupons when status is "active"' do
+
+    merchant = Merchant.create(name: "The Cat Store")
+    active_coupon = merchant.coupons.create(name: "10% Off", code: "10OFF", discount_type: "percent", discount_value: 10, status: true)
+    inactive_coupon = merchant.coupons.create(name: "$5 Off", code: "5OFF", discount_type: "dollar", discount_value: 5, status: false)
+
+    result = merchant.coupons_filtered_by_status('true')
+
+
+    expect(result).to include(active_coupon)  
+  end
+
+  it 'returns only inactive coupons when status is "inactive"' do
+
+    merchant = Merchant.create(name: "The Cat Store")
+    active_coupon = merchant.coupons.create(name: "10% Off", code: "10OFF", discount_type: "percent", discount_value: 10, status: true)
+    inactive_coupon = merchant.coupons.create(name: "$5 Off", code: "5OFF", discount_type: "dollar", discount_value: 5, status: false)
+
+
+    result = merchant.coupons_filtered_by_status('false')
+
+
+    expect(result).to include(inactive_coupon)  
+  end
+
+  it 'returns all coupons when no status is specified' do
+   
+    merchant = Merchant.create(name: "The Cat Store")
+    active_coupon = merchant.coupons.create(name: "10% Off", code: "10OFF", discount_type: "percent", discount_value: 10, status: true)
+    inactive_coupon = merchant.coupons.create(name: "$5 Off", code: "5OFF", discount_type: "dollar", discount_value: 5, status: false)
+
+
+    result = merchant.coupons_filtered_by_status(nil)
+
+
+    expect(result).to include(active_coupon, inactive_coupon)  
+  end
+
+  it 'returns all coupons when status is an invalid value' do
+
+    merchant = Merchant.create(name: "The Cat Store")
+    active_coupon = merchant.coupons.create(name: "10% Off", code: "10OFF", discount_type: "percent", discount_value: 10, status: true)
+    inactive_coupon = merchant.coupons.create(name: "$5 Off", code: "5OFF", discount_type: "dollar", discount_value: 5, status: false)
+
+   
+    result = merchant.coupons_filtered_by_status('invalid_status')
+
+
+    expect(result).to include(active_coupon, inactive_coupon)  
+  end
+end
 end
