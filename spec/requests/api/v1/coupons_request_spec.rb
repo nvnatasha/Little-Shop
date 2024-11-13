@@ -582,4 +582,20 @@ describe "GET /api/v1/merchants/:merchant_id/coupons" do
       end
     end
   end
+
+  describe 'GET #index' do
+  it 'returns an error when merchant_id is missing' do
+    get '/api/v1/merchants/:merchant_id/coupons', params: { status: 'true' }
+    expect(response).to have_http_status(:not_found)
+    expect(JSON.parse(response.body)['error']).to eq("Couldn't find Merchant with 'id'=:merchant_id")
+  end
+end
+
+  describe 'POST #create' do
+    it 'returns an error when merchant_id is missing' do
+      post '/api/v1/merchants/:merchant_id/coupons', params: { coupon: { name: 'New cat coupon', code: 'CAT', discount_type: 'percentage', discount_value: 10, status: true } }
+      expect(response).to have_http_status(:not_found)
+      expect(JSON.parse(response.body)['error']).to eq("Couldn't find Merchant with 'id'=:merchant_id")
+    end
+  end
 end
