@@ -89,7 +89,7 @@ class Api::V1::MerchantsController < ApplicationController
         code: coupon.code,
         discount_type: coupon.discount_type,
         discount_value: coupon.discount_value,
-        status: coupon.active ? 'active' : 'inactive'  # Assuming 'active' is a boolean field
+        status: coupon.active ? 'active' : 'inactive'
       }
     end
   end
