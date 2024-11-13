@@ -70,4 +70,22 @@ end
     invoice_statuses = invoices.map { |invoice| invoice[:attributes][:status] }
     expect(invoice_statuses).to include('pending', 'completed')
   end
+
+  describe 'GET /customers/:id' do
+
+    context 'when the customer does not exist' do
+      it 'returns a 404 status with an error message' do
+        merchant = Merchant.create(name: "cat things")
+        non_existent_id = 9999
+
+        get "/api/v1/merchants/#{merchant.id}/customers/#{non_existent_id}"
+
+        expect(response.status).to eq(404)
+    
+        json_response = JSON.parse(response.body)
+        expect(json_response['message']).to eq('Resource not found')
+      end
+    end
+  end
+
 end
